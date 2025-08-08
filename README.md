@@ -1,11 +1,11 @@
 # hack4
-# 🧠 Data Engineer Assistant – Agent Listing & Integration Platform
+# Data Engineer Assistant – Agent Listing & Integration Platform
 
 A **Django-powered platform** for listing AI agents, integrating them into your own applications, and accessing a **Data Engineer Assistant** that uses **RAG (Retrieval-Augmented Generation)** and **Web Search** to provide accurate, up-to-date answers.
 
 ---
 
-## 🚀 Features
+## Features
 
 - **Agent Listing** – Browse, search, and manage available AI agents.
 - **Agent Integration** – Easily embed selected agents into your apps via API.
@@ -20,7 +20,7 @@ A **Django-powered platform** for listing AI agents, integrating them into your 
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Backend** – [Django](https://www.djangoproject.com/) (Python 3.x)
 - **Database** – PostgreSQL (default) or any Django-supported DB
@@ -30,7 +30,7 @@ A **Django-powered platform** for listing AI agents, integrating them into your 
 
 ---
 
-## 📦 Installation
+## Installation
 
 # 1️⃣ **Clone the repository**
    ```bash

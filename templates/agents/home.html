@@ -1,0 +1,785 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome to Hack4{% endblock %}
+{% block page_title %}Agentic Data Platform{% endblock %}
+
+{% block content %}
+<style>
+/* Enhanced card hover effects with consistent sizing */
+.agent-card {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    height: 100%; /* Ensure all cards have same height */
+    display: flex;
+    flex-direction: column;
+}
+
+.agent-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.02), rgba(52, 199, 89, 0.02));
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 1;
+}
+
+.agent-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+    border-color: rgba(0, 122, 255, 0.2);
+}
+
+.agent-card:hover::before {
+    opacity: 1;
+}
+
+.agent-card .card-body {
+    position: relative;
+    z-index: 2;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.agent-card .card-img-top {
+    transition: transform 0.4s ease;
+    height: 160px; /* Reduced from 200px */
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.agent-card:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+/* Card image container for consistent height */
+.card-img-container {
+    height: 160px; /* Reduced from 200px */
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+}
+
+/* Verified badge positioning and hover effect */
+.verified-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(52, 199, 89, 0.9);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 3;
+    transform: scale(1);
+}
+
+.agent-card:hover .verified-badge {
+    transform: scale(1.1);
+    background: rgba(52, 199, 89, 1);
+    box-shadow: 0 4px 12px rgba(52, 199, 89, 0.4);
+}
+
+/* Verified icon in card body */
+.verified-icon {
+    transition: all 0.3s ease;
+}
+
+.agent-card:hover .verified-icon {
+    transform: scale(1.2);
+    filter: drop-shadow(0 2px 4px rgba(0, 122, 255, 0.3));
+}
+
+/* Card content distribution */
+.card-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-description {
+    flex-grow: 1;
+    margin-bottom: 0.75rem; /* Reduced from 1rem */
+}
+
+.card-badges {
+    margin-bottom: 1rem; /* Reduced from 1.5rem */
+}
+
+.card-actions {
+    margin-top: auto;
+    margin-bottom: 0.75rem; /* Reduced from 1rem */
+}
+
+.card-footer-info {
+    margin-top: auto;
+    padding-top: 0.75rem; /* Reduced from 1rem */
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Stats cards hover effects */
+.stats-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    border: none;
+    height: 100%;
+}
+
+.stats-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.stats-card:hover::after {
+    opacity: 1;
+}
+
+.stats-card .card-body {
+    position: relative;
+    z-index: 2;
+}
+
+/* Runner sidebar cards */
+.runner-sidebar-card {
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+}
+
+.runner-sidebar-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    border-color: rgba(0, 122, 255, 0.15);
+}
+
+.runner-item {
+    transition: all 0.25s ease;
+    border-radius: 8px;
+    margin: 2px 0;
+}
+
+.runner-item:hover {
+    background: rgba(0, 122, 255, 0.04);
+    transform: translateX(4px);
+}
+
+/* Button hover enhancements */
+.btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-outline-primary:hover {
+    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+/* Badge hover effects */
+.badge {
+    transition: all 0.2s ease;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+/* Search bar enhancement */
+.search-enhanced {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.search-enhanced:focus-within {
+    box-shadow: 0 8px 25px rgba(0, 122, 255, 0.15);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* Welcome banner enhancement */
+.welcome-banner {
+    position: relative;
+    overflow: hidden;
+}
+
+.welcome-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: shimmer 3s infinite;
+}
+
+/* Welcome close button styling */
+.welcome-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 10;
+    cursor: pointer;
+}
+
+.welcome-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.welcome-close:active {
+    transform: scale(0.95);
+}
+
+.welcome-close i {
+    transition: transform 0.2s ease;
+}
+
+.welcome-close:hover i {
+    transform: rotate(90deg);
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Dark mode adjustments */
+[data-bs-theme="dark"] .agent-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .agent-card:hover {
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+    border-color: rgba(0, 122, 255, 0.4);
+}
+
+[data-bs-theme="dark"] .verified-badge {
+    background: rgba(52, 199, 89, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .agent-card:hover .verified-badge {
+    background: rgba(52, 199, 89, 1);
+    box-shadow: 0 4px 12px rgba(52, 199, 89, 0.5);
+}
+
+[data-bs-theme="dark"] .card-footer-info {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+</style>
+
+<!-- Welcome Section -->
+<div class="row mb-4" id="welcomeBanner">
+    <div class="col-12">
+        <div class="bg-primary text-white p-4 rounded-3 welcome-banner">
+            <button class="welcome-close" onclick="closeWelcomeBanner()" aria-label="Close welcome banner">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h2 class="mb-2">
+                        {% if user.is_authenticated %}
+                        Welcome back, {{ user.username }}!
+                        {% else %}
+                        Welcome to Hack4
+                        {% endif %}
+                    </h2>
+                    <p class="mb-3 opacity-75">Discover and run powerful AI agents for data analysis, processing, and automation. Choose from our collection of specialized agents and execute them with your preferred infrastructure.</p>
+                </div>
+                <div class="col-lg-4 text-end">
+                    <i class="bi bi-robot" style="font-size: 4rem; opacity: 0.7;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Sidebar for Runners -->
+    {% if user.is_authenticated and user_runners %}
+    <div class="col-lg-3 mb-4">
+        <div class="card runner-sidebar-card">
+            <div class="card-header d-flex justify-content-between align-items-center border-0 bg-transparent">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-cpu me-2 text-primary"></i>Your Runners
+                </h6>
+                <button class="btn btn-sm btn-outline-primary" onclick="showAddRunner()">
+                    <i class="bi bi-plus"></i>
+                </button>
+            </div>
+            <div class="card-body p-0">
+                {% for runner in user_runners %}
+                <div class="runner-item d-flex align-items-center p-3">
+                    <div class="runner-status me-3 {% if runner.is_active %}bg-success{% else %}bg-secondary{% endif %}"
+                         style="width: 8px; height: 8px; border-radius: 50%;"></div>
+                    <div class="flex-grow-1">
+                        <div class="fw-medium">{{ runner.name }}</div>
+                        <small class="text-muted">{{ runner.get_runner_type_display }}</small>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-link text-muted p-1" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-play me-2"></i>Start</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Configure</a></li>
+                            <li><a class="dropdown-item" href="{% url 'runners' %}"><i class="bi bi-eye me-2"></i>View All</a></li>
+                        </ul>
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="p-3 border-top">
+                    <a href="{% url 'runners' %}" class="btn btn-sm btn-outline-primary w-100">
+                        <i class="bi bi-cpu me-2"></i>Manage Runners
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Main Content Area -->
+    <div class="{% if user.is_authenticated and user_runners %}col-lg-9{% else %}col-12{% endif %}">
+        <!-- Search Bar -->
+        <div class="row mb-4">
+            <div class="col-lg-10 mx-auto">
+                <div class="search-enhanced rounded-3 p-1">
+                    <form method="GET" class="d-flex">
+                        <input class="form-control form-control-lg border-0 me-2" type="search" name="q" 
+                               placeholder="Search agents by name, capabilities, or use case..." 
+                               value="{{ query|default:'' }}">
+                        <button class="btn btn-primary btn-lg" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card stats-card stats-primary text-white">
+                    <div class="card-body text-center py-4">
+                        <i class="bi bi-robot mb-3" style="font-size: 2.5rem;"></i>
+                        <h3 class="mb-2 fw-bold">{{ total_agents }}</h3>
+                        <p class="mb-0 opacity-75">Available Agents</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card stats-card stats-success text-white">
+                    <div class="card-body text-center py-4">
+                        <i class="bi bi-cpu mb-3" style="font-size: 2.5rem;"></i>
+                        <h3 class="mb-2 fw-bold">{{ user_runners_count }}</h3>
+                        <p class="mb-0 opacity-75">Your Runners</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card stats-card stats-info text-white">
+                    <div class="card-body text-center py-4">
+                        <i class="bi bi-clock mb-3" style="font-size: 2.5rem;"></i>
+                        <h3 class="mb-2 fw-bold">24/7</h3>
+                        <p class="mb-0 opacity-75">Available</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agents Grid -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h4 class="mb-4 fw-bold">
+                    {% if query %}
+                    Search Results for "{{ query }}"
+                    {% else %}
+                    Available AI Agents
+                    {% endif %}
+                </h4>
+                
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-3">
+                    {% for agent in agents %}
+                    <div class="col">
+                        <div class="agent-card card border-0">
+                            {% if agent.image %}
+                            <div class="card-img-container overflow-hidden" style="border-radius: 12px 12px 0 0;">
+                                <img src="{{ agent.image.url }}" class="card-img-top w-100 h-100" style="object-fit: cover;">
+                                {% if agent.owner.username == 'system' %}
+                                <span class="verified-badge">Verified</span>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <div class="card-img-container d-flex align-items-center justify-content-center position-relative" 
+                                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px 12px 0 0;">
+                                <i class="bi bi-robot text-white" style="font-size: 2.5rem;"></i>
+                                {% if agent.owner.username == 'system' %}
+                                <span class="verified-badge">Verified</span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="card-body p-3">
+                                <div class="card-content">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-0 fw-bold">{{ agent.name }}</h6>
+                                        {% if agent.owner.username == 'system' %}
+                                        <i class="bi bi-patch-check-fill text-primary verified-icon" style="font-size: 0.9rem;"></i>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="card-description">
+                                        <p class="card-text text-muted small mb-0">{{ agent.description|truncatewords:15 }}</p>
+                                    </div>
+                                    
+                                    <div class="card-badges">
+                                        {% for skill in agent.get_skills_list|slice:":3" %}
+                                        <span class="badge bg-light text-dark me-1 mb-1" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">{{ skill }}</span>
+                                        {% endfor %}
+                                        {% if agent.get_skills_list|length > 3 %}
+                                        <span class="badge bg-secondary" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">+{{ agent.get_skills_list|length|add:"-3" }}</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="card-actions">
+                                        <div class="d-grid gap-1">
+                                            <button class="btn btn-primary btn-sm" onclick="useAgentOnSite({{ agent.pk }}, '{{ agent.name|escapejs }}')">
+                                                <i class="bi bi-play-circle me-1"></i>Use on Site
+                                            </button>
+                                            
+                                            {% if user.is_authenticated and user_runners %}
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-primary btn-sm dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-cpu me-1"></i>Your Runner
+                                                </button>
+                                                <ul class="dropdown-menu selector-dropdown w-100">
+                                                    {% for runner in user_runners %}
+                                                    <li>
+                                                        <a class="dropdown-item d-flex align-items-center small" href="#" 
+                                                           onclick="useAgentWithRunner({{ agent.pk }}, '{{ agent.name|escapejs }}', {{ runner.pk }}, '{{ runner.name|escapejs }}')">
+                                                            <div class="runner-status me-2"></div>
+                                                            <div>
+                                                                <div class="fw-medium">{{ runner.name }}</div>
+                                                                <small class="text-muted">{{ runner.get_runner_type_display }}</small>
+                                                            </div>
+                                                        </a>
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                            {% elif user.is_authenticated %}
+                                            <a href="{% url 'runners' %}" class="btn btn-outline-secondary btn-sm">
+                                                <i class="bi bi-cpu me-1"></i>Setup Runner
+                                            </a>
+                                            {% else %}
+                                            <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm">
+                                                <i class="bi bi-cpu me-1"></i>Login
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="card-footer-info d-flex justify-content-between align-items-center">
+                                        <small class="text-muted" style="font-size: 0.75rem;">
+                                            <i class="bi bi-person-circle me-1"></i>
+                                            {% if agent.owner.username == 'system' %}
+                                            Hack4 Team
+                                            {% else %}
+                                            {{ agent.owner.username }}
+                                            {% endif %}
+                                        </small>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewAgentDetails({{ agent.pk }})" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                            <i class="bi bi-info-circle"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div class="text-center py-5">
+                            <i class="bi bi-search text-muted mb-3" style="font-size: 4rem;"></i>
+                            <h4>No agents found</h4>
+                            <p class="text-muted">
+                                {% if query %}
+                                Try different search terms to find agents.
+                                {% else %}
+                                No agents are currently available.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- No Runners Message for Authenticated Users -->
+        {% if user.is_authenticated and not user_runners %}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info border-0" style="background: rgba(0, 122, 255, 0.08); border-radius: 12px;">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-info-circle me-3" style="font-size: 1.5rem;"></i>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 fw-semibold">No runners configured</h6>
+                            <p class="mb-0">Add a runner to execute agents with your own infrastructure and get better performance.</p>
+                        </div>
+                        <a href="{% url 'runners' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Add Runner
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Agent Loading Modal -->
+<div class="modal fade" id="agentLoadingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Loading Agent</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5 id="loadingAgentName">Loading Agent...</h5>
+                    <p class="text-muted" id="loadingStatus">Initializing agent environment...</p>
+                    
+                    <div class="progress mt-3" style="height: 8px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div id="agentInterface" class="d-none">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6>Agent Interface</h6>
+                            <div class="bg-dark text-light p-3 rounded" style="height: 300px; overflow-y: auto;">
+                                <div id="agentOutput">
+                                    <div class="text-success">Agent loaded successfully!</div>
+                                    <div class="text-muted">Ready to process your data...</div>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="Enter your command or data..." id="agentInput">
+                                    <button class="btn btn-primary" onclick="sendToAgent()">
+                                        <i class="bi bi-send"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Agent Status</h6>
+                            <div class="card">
+                                <div class="card-body">
+                                    <p class="mb-1"><strong>Status:</strong> <span class="badge bg-success">Running</span></p>
+                                    <p class="mb-1"><strong>Runtime:</strong> <span id="runtime">00:00:23</span></p>
+                                    <p class="mb-1"><strong>Memory:</strong> 245 MB</p>
+                                    <p class="mb-1"><strong>CPU:</strong> 12%</p>
+                                    <hr>
+                                    <button class="btn btn-sm btn-warning w-100 mb-2">
+                                        <i class="bi bi-pause"></i> Pause
+                                    </button>
+                                    <button class="btn btn-sm btn-danger w-100">
+                                        <i class="bi bi-stop"></i> Stop
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentAgent = null;
+let runtime = 0;
+
+function useAgentOnSite(agentId, agentName) {
+    currentAgent = { id: agentId, name: agentName, mode: 'site' };
+    showAgentLoader();
+}
+
+function useAgentWithRunner(agentId, agentName, runnerId, runnerName) {
+    currentAgent = { id: agentId, name: agentName, mode: 'runner', runnerId: runnerId, runnerName: runnerName };
+    showAgentLoader();
+}
+
+function showAgentLoader() {
+    document.getElementById('loadingAgentName').textContent = `Loading ${currentAgent.name}...`;
+    document.getElementById('loadingStatus').textContent = 'Initializing agent environment...';
+    
+    const modal = new bootstrap.Modal(document.getElementById('agentLoadingModal'));
+    modal.show();
+    
+    // Simulate loading process
+    let progress = 0;
+    const progressBar = document.querySelector('.progress-bar');
+    const statusEl = document.getElementById('loadingStatus');
+    
+    const loadingSteps = [
+        'Initializing agent environment...',
+        'Loading AI models...',
+        'Setting up data pipelines...',
+        'Connecting to services...',
+        'Agent ready!'
+    ];
+    
+    const interval = setInterval(() => {
+        progress += 20;
+        progressBar.style.width = progress + '%';
+        
+        if (progress <= 80) {
+            statusEl.textContent = loadingSteps[Math.floor(progress / 20)];
+        } else {
+            statusEl.textContent = loadingSteps[4];
+            clearInterval(interval);
+            
+            setTimeout(() => {
+                document.querySelector('.spinner-border').parentElement.classList.add('d-none');
+                document.getElementById('agentInterface').classList.remove('d-none');
+                startRuntime();
+            }, 1000);
+        }
+    }, 1000);
+}
+
+function startRuntime() {
+    setInterval(() => {
+        runtime++;
+        const minutes = Math.floor(runtime / 60);
+        const seconds = runtime % 60;
+        document.getElementById('runtime').textContent = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }, 1000);
+}
+
+function sendToAgent() {
+    const input = document.getElementById('agentInput');
+    const output = document.getElementById('agentOutput');
+    
+    if (input.value.trim()) {
+        output.innerHTML += `<div class="text-info">User: ${input.value}</div>`;
+        
+        // Simulate agent response
+        setTimeout(() => {
+            output.innerHTML += `<div class="text-warning">Agent: Processing your request...</div>`;
+            setTimeout(() => {
+                output.innerHTML += `<div class="text-success">Agent: Task completed successfully! Results are ready.</div>`;
+                output.scrollTop = output.scrollHeight;
+            }, 1500);
+        }, 500);
+        
+        input.value = '';
+        output.scrollTop = output.scrollHeight;
+    }
+}
+
+function viewAgentDetails(agentId) {
+    window.location.href = `/agent/${agentId}/`;
+}
+
+function showRunnerSetup() {
+    alert('Redirect to runner setup page - coming soon!');
+}
+
+function showAddRunner() {
+    alert('Add runner functionality - coming soon!');
+}
+
+function closeWelcomeBanner() {
+    const banner = document.getElementById('welcomeBanner');
+    banner.style.opacity = '0';
+    banner.style.transform = 'translateY(-20px)';
+    
+    setTimeout(() => {
+        banner.style.display = 'none';
+        localStorage.setItem('welcomeBannerClosed', 'true');
+    }, 300);
+}
+
+// Check if welcome banner should be hidden
+document.addEventListener('DOMContentLoaded', function() {
+    if (localStorage.getItem('welcomeBannerClosed') === 'true') {
+        document.getElementById('welcomeBanner').style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Chatbot Setup - Hack4{% endblock %}
+{% block page_title %}Chatbot Setup{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <i class="bi bi-robot text-primary" style="font-size: 4rem;"></i>
+                    </div>
+                    
+                    <h2 class="fw-bold mb-3">Data Engineer Assistant Setup</h2>
+                    <p class="text-muted mb-4">
+                        The chatbot system needs to be set up. Please run the following commands to initialize the database and create the chatbot.
+                    </p>
+                    
+                    <div class="alert alert-info text-start">
+                        <h6><i class="bi bi-terminal me-2"></i>Setup Commands:</h6>
+                        <pre class="mb-2"><code>python manage.py migrate</code></pre>
+                        <pre class="mb-0"><code>python manage.py setup_chatbot</code></pre>
+                    </div>
+                    
+                    {% if error %}
+                    <div class="alert alert-warning text-start mt-3">
+                        <h6><i class="bi bi-exclamation-triangle me-2"></i>Error Details:</h6>
+                        <code>{{ error }}</code>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'home' %}" class="btn btn-primary me-2">
+                            <i class="bi bi-house me-2"></i>Go Home
+                        </a>
+                        <button class="btn btn-outline-primary" onclick="location.reload()">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Retry
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

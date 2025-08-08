@@ -1,0 +1,441 @@
+{% extends 'base.html' %}
+{% load analytics_extras %}
+
+{% block title %}Analytics - Hack4{% endblock %}
+{% block page_title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<style>
+.analytics-card {
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.analytics-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.metric-card {
+    background: linear-gradient(135deg, var(--primary-color), #005AE5);
+    color: white;
+    border: none;
+}
+
+.metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.trend-positive {
+    color: var(--accent-color);
+}
+
+.trend-negative {
+    color: var(--danger-color);
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+.skill-bar {
+    background: var(--background-secondary);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.skill-progress {
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.8s ease;
+}
+
+.activity-item {
+    padding: 1rem;
+    border-left: 3px solid var(--primary-color);
+    background: var(--background-primary);
+    margin-bottom: 1rem;
+    border-radius: 0 8px 8px 0;
+    transition: all 0.3s ease;
+}
+
+.activity-item:hover {
+    background: var(--background-secondary);
+    transform: translateX(4px);
+}
+
+[data-bs-theme="dark"] .analytics-card {
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+[data-bs-theme="dark"] .analytics-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+[data-bs-theme="dark"] .skill-bar {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .activity-item {
+    background: var(--background-secondary);
+}
+
+[data-bs-theme="dark"] .activity-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+</style>
+
+<!-- Header Section -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="fw-bold">Analytics Dashboard</h2>
+        <p class="text-muted">Comprehensive insights into your AI agent usage and performance</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <div class="dropdown">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-calendar me-2"></i>Last 30 Days
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                <li><a class="dropdown-item" href="#">Last 90 Days</a></li>
+                <li><a class="dropdown-item" href="#">This Year</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Key Metrics -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card metric-card text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-robot mb-2" style="font-size: 2rem; opacity: 0.8;"></i>
+                <div class="metric-value">{{ usage_stats.total_executions }}</div>
+                <p class="mb-0 opacity-75">Total Executions</p>
+                <small class="trend-positive">
+                    <i class="bi bi-arrow-up me-1"></i>+12% this month
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card analytics-card">
+            <div class="card-body text-center">
+                <i class="bi bi-check-circle text-success mb-2" style="font-size: 2rem;"></i>
+                <div class="metric-value text-success">{{ usage_stats.success_rate }}%</div>
+                <p class="mb-0 text-muted">Success Rate</p>
+                <small class="trend-positive">
+                    <i class="bi bi-arrow-up me-1"></i>+2.1% improvement
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card analytics-card">
+            <div class="card-body text-center">
+                <i class="bi bi-clock text-info mb-2" style="font-size: 2rem;"></i>
+                <div class="metric-value text-info">{{ usage_stats.avg_execution_time }}</div>
+                <p class="mb-0 text-muted">Avg. Execution Time</p>
+                <small class="trend-positive">
+                    <i class="bi bi-arrow-down me-1"></i>-15% faster
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card analytics-card">
+            <div class="card-body text-center">
+                <i class="bi bi-hdd text-warning mb-2" style="font-size: 2rem;"></i>
+                <div class="metric-value text-warning">{{ usage_stats.data_processed }}</div>
+                <p class="mb-0 text-muted">Data Processed</p>
+                <small class="trend-positive">
+                    <i class="bi bi-arrow-up me-1"></i>+28% this month
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card analytics-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-graph-up me-2 text-primary"></i>Usage Trends
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="usageChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card analytics-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-pie-chart me-2 text-primary"></i>Top Skills
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for skill, count, width in top_skills %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-medium">{{ skill }}</span>
+                        <span class="text-muted">{{ count }}</span>
+                    </div>
+                    <div class="skill-bar" style="height: 8px;">
+                        <div class="skill-progress" style="width: {{ width }}%;"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Agent Performance & Activity -->
+<div class="row mb-4">
+    <div class="col-lg-6">
+        <div class="card analytics-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-star me-2 text-primary"></i>Popular Agents
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for agent in popular_agents %}
+                <div class="d-flex align-items-center mb-3 p-2 rounded" style="background: var(--background-secondary);">
+                    <div class="me-3">
+                        <div class="bg-primary rounded-2 d-flex align-items-center justify-content-center" 
+                             style="width: 40px; height: 40px;">
+                            <i class="bi bi-robot text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1 fw-bold">{{ agent.name }}</h6>
+                        <p class="mb-0 text-muted small">{{ agent.description|truncatewords:8 }}</p>
+                        <div class="mt-1">
+                            {% for skill in agent.get_skills_list|slice:":3" %}
+                            <span class="badge bg-light text-dark me-1" style="font-size: 10px;">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="fw-bold text-primary">{{ forloop.counter|mock_usage_count }}</div>
+                        <small class="text-muted">uses</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card analytics-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-activity me-2 text-primary"></i>Recent Activity
+                </h5>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                {% for activity in recent_activities %}
+                <div class="activity-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 fw-bold">{{ activity.agent_name }}</h6>
+                            <p class="mb-1 text-muted small">
+                                {{ activity.action|title }} on {{ activity.runner }}
+                            </p>
+                            <div class="d-flex align-items-center">
+                                <span class="badge {% if activity.status == 'success' %}bg-success{% elif activity.status == 'running' %}bg-primary{% else %}bg-warning{% endif %} me-2">
+                                    {{ activity.status|title }}
+                                </span>
+                                <small class="text-muted">{{ activity.duration }}</small>
+                            </div>
+                        </div>
+                        <small class="text-muted">{{ activity.timestamp }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Your Agents Overview -->
+<div class="row">
+    <div class="col-12">
+        <div class="card analytics-card">
+            <div class="card-header bg-transparent border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-collection me-2 text-primary"></i>Your Agents Overview
+                    </h5>
+                    <a href="{% url 'dashboard' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye me-1"></i>View All
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3 text-center">
+                        <h3 class="text-primary mb-0">{{ user_agent_count }}</h3>
+                        <small class="text-muted">Total Agents</small>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h3 class="text-success mb-0">{{ active_user_agents }}</h3>
+                        <small class="text-muted">Active</small>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h3 class="text-info mb-0">{{ usage_stats.this_month_executions }}</h3>
+                        <small class="text-muted">Monthly Runs</small>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h3 class="text-warning mb-0">{{ usage_stats.total_runtime }}</h3>
+                        <small class="text-muted">Total Runtime</small>
+                    </div>
+                </div>
+                
+                {% if user_agents %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Agent</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Last Used</th>
+                                <th>Performance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for agent in user_agents|slice:":5" %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-robot me-2 text-primary"></i>
+                                        <div>
+                                            <div class="fw-medium">{{ agent.name }}</div>
+                                            <small class="text-muted">{{ agent.description|truncatewords:6 }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge {% if agent.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {% if agent.is_active %}Active{% else %}Inactive{% endif %}
+                                    </span>
+                                </td>
+                                <td class="text-muted">{{ agent.created_at|date:"M d, Y" }}</td>
+                                <td class="text-muted">{{ forloop.counter }} days ago</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress me-2" style="width: 60px; height: 8px;">
+                                            <div class="progress-bar bg-success" style="width: {{ forloop.counter|mock_performance }}%;"></div>
+                                        </div>
+                                        <small class="text-muted">{{ forloop.counter|mock_performance }}%</small>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-robot text-muted mb-3" style="font-size: 3rem;"></i>
+                    <h5>No Agents Yet</h5>
+                    <p class="text-muted">Create your first agent to start tracking analytics.</p>
+                    <a href="{% url 'home' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Explore Agents
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js for interactive charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Usage Trends Chart
+    const ctx = document.getElementById('usageChart').getContext('2d');
+    const usageChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ performance_data.labels|safe }},
+            datasets: [{
+                label: 'Executions',
+                data: {{ performance_data.executions|safe }},
+                borderColor: 'rgb(0, 122, 255)',
+                backgroundColor: 'rgba(0, 122, 255, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Success Rate (%)',
+                data: {{ performance_data.success_rates|safe }},
+                borderColor: 'rgb(52, 199, 89)',
+                backgroundColor: 'rgba(52, 199, 89, 0.1)',
+                tension: 0.4,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false,
+                    },,
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',  position: 'top',
+                }
+            }
+        }
+    });
+    
+    // Animate skill progress bars
+    setTimeout(() => {
+        document.querySelectorAll('.skill-progress').forEach(bar => {querySelectorAll('.skill-progress').forEach(bar => {
+            const width = bar.style.width;nst width = bar.style.width;
+            bar.style.width = '0%';width = '0%';
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 100);
+        });
+    }, 500);
+});
+</script>
+
+{% endblock %}
+

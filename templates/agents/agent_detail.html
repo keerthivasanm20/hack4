@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ agent.name }} - Hack4{% endblock %}
+{% block page_title %}{{ agent.name }}{% endblock %}
+
+{% block content %}
+<style>
+.detail-card {
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+}
+
+.detail-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+[data-bs-theme="dark"] .detail-card {
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+[data-bs-theme="dark"] .detail-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+</style>
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card detail-card border-0">
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-4">
+                            {% if agent.image %}
+                            <img src="{{ agent.image.url }}" class="img-fluid rounded" alt="{{ agent.name }}" style="max-height: 200px; width: 100%; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="bi bi-robot text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h3>{{ agent.name }}</h3>
+                            <p class="text-muted mb-3 small">Created by {{ agent.owner.username }} on {{ agent.created_at|date:"F d, Y" }}</p>
+                            <p>{{ agent.description }}</p>
+                            
+                            <h6>Skills</h6>
+                            <div class="mb-3">
+                                {% for skill in agent.get_skills_list %}
+                                <span class="badge bg-primary me-2 mb-1 small">{{ skill }}</span>
+                                {% endfor %}
+                            </div>
+                            
+                            {% if user == agent.owner %}
+                            <div class="alert alert-info small">
+                                <i class="bi bi-info-circle"></i> This is your agent. You can edit it from your dashboard.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card detail-card border-0">
+                <div class="card-header">
+                    <h6 class="mb-0">Agent Details</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><strong>Status:</strong> 
+                            <span class="badge bg-success">Active</span>
+                        </li>
+                        <li class="mb-2"><strong>Created:</strong> {{ agent.created_at|date:"M d, Y" }}</li>
+                        <li class="mb-2"><strong>Last Updated:</strong> {{ agent.updated_at|date:"M d, Y" }}</li>
+                        <li class="mb-2"><strong>Owner:</strong> {{ agent.owner.username }}</li>
+                    </ul>
+                    
+                    {% if user.is_authenticated and user != agent.owner %}
+                    <button class="btn btn-primary w-100 mt-3">
+                        <i class="bi bi-chat-dots"></i> Contact Agent
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-3">
+        <div class="col">
+            <h6>Run Agent</h6>
+            
+            {% if user.is_authenticated %}
+            <div class="d-grid gap-2">
+                <button class="btn btn-primary" onclick="useAgentOnSite({{ agent.pk }}, '{{ agent.name|escapejs }}')">
+                    <i class="bi bi-play-circle me-2"></i>Use on Our Site
+                </button>
+                
+                {% if user_runners %}
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-cpu me-2"></i>Use Your Runner
+                    </button>
+                    <ul class="dropdown-menu w-100">
+                        {% for runner in user_runners %}
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="useAgentWithRunner({{ agent.pk }}, '{{ agent.name|escapejs }}', {{ runner.pk }}, '{{ runner.name|escapejs }}')">
+                                <div class="d-flex align-items-center">
+                                    <div class="runner-status me-2"></div>
+                                    <div>
+                                        <div class="fw-medium small">{{ runner.name }}</div>
+                                        <small class="text-muted">{{ runner.get_runner_type_display }}</small>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% else %}
+                <a href="{% url 'runners' %}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-cpu me-2"></i>Setup Runner First
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function useAgentOnSite(agentId, agentName) {
+    alert(`Using ${agentName} on our site... (Mock implementation)`);
+}
+
+function useAgentWithRunner(agentId, agentName, runnerId, runnerName) {
+    alert(`Using ${agentName} with ${runnerName}... (Mock implementation)`);
+}
+</script>
+{% endblock %}

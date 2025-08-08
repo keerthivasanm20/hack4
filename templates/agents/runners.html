@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+
+{% block title %}Runners - Hack4{% endblock %}
+{% block page_title %}Runner Management{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>Runner Management</h2>
+        <p class="text-muted">Monitor and manage your computational runners for AI agent execution.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <button class="btn btn-primary" onclick="showAddRunnerModal()">
+            <i class="bi bi-plus-circle"></i> Add New Runner
+        </button>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ runner_stats.total_runners }}</h3>
+                        <p class="mb-0">Total Runners</p>
+                    </div>
+                    <i class="bi bi-cpu" style="font-size: 2rem; opacity: 0.7;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ runner_stats.active_runners }}</h3>
+                        <p class="mb-0">Active</p>
+                    </div>
+                    <i class="bi bi-check-circle" style="font-size: 2rem; opacity: 0.7;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ runner_stats.total_runtime }}</h3>
+                        <p class="mb-0">Total Runtime</p>
+                    </div>
+                    <i class="bi bi-clock" style="font-size: 2rem; opacity: 0.7;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ runner_stats.avg_cpu_usage }}</h3>
+                        <p class="mb-0">Avg CPU Usage</p>
+                    </div>
+                    <i class="bi bi-speedometer2" style="font-size: 2rem; opacity: 0.7;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Runners List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Your Runners</h5>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="refreshRunners()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            Filter
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="filterRunners('all')">All Runners</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterRunners('active')">Active Only</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterRunners('inactive')">Inactive Only</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if user_runners %}
+                <div class="row" id="runnersGrid">
+                    {% for runner in user_runners %}
+                    <div class="col-lg-6 col-xl-4 mb-4 runner-item" data-status="{% if runner.is_active %}active{% else %}inactive{% endif %}">
+                        <div class="card runner-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="runner-status me-3 {% if runner.is_active %}bg-success{% else %}bg-secondary{% endif %}"
+                                             style="width: 12px; height: 12px; border-radius: 50%;"></div>
+                                        <div>
+                                            <h6 class="mb-0">{{ runner.name }}</h6>
+                                            <small class="text-muted">{{ runner.get_runner_type_display }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-link text-muted" data-bs-toggle="dropdown">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#" onclick="editRunner({{ runner.pk }})">
+                                                <i class="bi bi-pencil me-2"></i>Edit
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="viewRunnerLogs({{ runner.pk }})">
+                                                <i class="bi bi-file-text me-2"></i>View Logs
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="configureRunner({{ runner.pk }})">
+                                                <i class="bi bi-gear me-2"></i>Configure
+                                            </a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteRunner({{ runner.pk }})">
+                                                <i class="bi bi-trash me-2"></i>Delete
+                                            </a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                {% if runner.description %}
+                                <p class="text-muted small mb-3">{{ runner.description|truncatewords:15 }}</p>
+                                {% endif %}
+                                
+                                <!-- Mock Status Information -->
+                                <div class="row text-center mb-3">
+                                    <div class="col-4">
+                                        <div class="small text-muted">CPU</div>
+                                        <div class="fw-bold text-{% if runner.is_active %}primary{% else %}muted{% endif %}">
+                                            {% if runner.is_active %}{{ forloop.counter|add:"15" }}%{% else %}0%{% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="small text-muted">Memory</div>
+                                        <div class="fw-bold text-{% if runner.is_active %}info{% else %}muted{% endif %}">
+                                            {% if runner.is_active %}{{ forloop.counter|add:"30" }}%{% else %}0%{% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="small text-muted">Uptime</div>
+                                        <div class="fw-bold text-{% if runner.is_active %}success{% else %}muted{% endif %}">
+                                            {% if runner.is_active %}{{ forloop.counter }}h{% else %}0h{% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Control Buttons -->
+                                <div class="d-grid gap-2">
+                                    {% if runner.is_active %}
+                                    <button class="btn btn-sm btn-warning" onclick="pauseRunner({{ runner.pk }})">
+                                        <i class="bi bi-pause"></i> Pause
+                                    </button>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-success" onclick="startRunner({{ runner.pk }})">
+                                        <i class="bi bi-play"></i> Start
+                                    </button>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mt-2 pt-2 border-top">
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock me-1"></i>
+                                        Created {{ runner.created_at|timesince }} ago
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-cpu text-muted mb-3" style="font-size: 4rem;"></i>
+                    <h4>No Runners Configured</h4>
+                    <p class="text-muted mb-4">Get started by adding your first computational runner.</p>
+                    <button class="btn btn-primary" onclick="showAddRunnerModal()">
+                        <i class="bi bi-plus-circle me-2"></i>Add Your First Runner
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Runner Modal -->
+<div class="modal fade" id="addRunnerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Runner</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addRunnerForm">
+                    <div class="mb-3">
+                        <label for="runnerName" class="form-label">Runner Name</label>
+                        <input type="text" class="form-control" id="runnerName" placeholder="My Cloud Runner" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="runnerType" class="form-label">Runner Type</label>
+                        <select class="form-select" id="runnerType" required>
+                            <option value="">Select runner type...</option>
+                            <option value="local">Local Runner</option>
+                            <option value="cloud">Cloud Runner</option>
+                            <option value="gpu">GPU Runner</option>
+                            <option value="edge">Edge Runner</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="runnerDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="runnerDescription" rows="3" placeholder="Describe your runner..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="endpointUrl" class="form-label">Endpoint URL (Optional)</label>
+                        <input type="url" class="form-control" id="endpointUrl" placeholder="https://your-runner.example.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="apiKey" class="form-label">API Key (Optional)</label>
+                        <input type="password" class="form-control" id="apiKey" placeholder="Enter API key...">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addRunner()">Add Runner</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showAddRunnerModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addRunnerModal'));
+    modal.show();
+}
+
+function addRunner() {
+    // Mock implementation - would normally submit to backend
+    alert('Runner added successfully! (Mock implementation)');
+    bootstrap.Modal.getInstance(document.getElementById('addRunnerModal')).hide();
+    location.reload();
+}
+
+function refreshRunners() {
+    location.reload();
+}
+
+function filterRunners(status) {
+    const runners = document.querySelectorAll('.runner-item');
+    runners.forEach(runner => {
+        if (status === 'all') {
+            runner.style.display = 'block';
+        } else {
+            const runnerStatus = runner.dataset.status;
+            runner.style.display = runnerStatus === status ? 'block' : 'none';
+        }
+    });
+}
+
+function startRunner(runnerId) {
+    alert(`Starting runner ${runnerId}... (Mock implementation)`);
+}
+
+function pauseRunner(runnerId) {
+    alert(`Pausing runner ${runnerId}... (Mock implementation)`);
+}
+
+function editRunner(runnerId) {
+    alert(`Edit runner ${runnerId} - coming soon!`);
+}
+
+function viewRunnerLogs(runnerId) {
+    alert(`View logs for runner ${runnerId} - coming soon!`);
+}
+
+function configureRunner(runnerId) {
+    alert(`Configure runner ${runnerId} - coming soon!`);
+}
+
+function deleteRunner(runnerId) {
+    if (confirm('Are you sure you want to delete this runner?')) {
+        alert(`Deleting runner ${runnerId}... (Mock implementation)`);
+    }
+}
+</script>
+{% endblock %}

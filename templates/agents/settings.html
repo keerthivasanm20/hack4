@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings - Hack4{% endblock %}
+{% block page_title %}Account Settings{% endblock %}
+
+{% block content %}
+<style>
+.settings-card {
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+}
+
+.settings-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.danger-zone {
+    border: 1px solid rgba(255, 59, 48, 0.2);
+    background: rgba(255, 59, 48, 0.05);
+}
+
+[data-bs-theme="dark"] .settings-card {
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+[data-bs-theme="dark"] .settings-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+[data-bs-theme="dark"] .danger-zone {
+    border-color: rgba(255, 69, 58, 0.3);
+    background: rgba(255, 69, 58, 0.1);
+}
+</style>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Profile Settings -->
+        <div class="card settings-card border-0 mb-4">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-person-circle me-2 text-primary"></i>Profile Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_profile">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label fw-medium">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" 
+                                   value="{{ user.first_name }}" placeholder="Enter first name">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label fw-medium">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" 
+                                   value="{{ user.last_name }}" placeholder="Enter last name">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label fw-medium">Username</label>
+                        <input type="text" class="form-control" id="username" value="{{ user.username }}" disabled>
+                        <small class="form-text text-muted">Username cannot be changed</small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="email" class="form-label fw-medium">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               value="{{ user.email }}" placeholder="Enter email address">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Update Profile
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Password Change -->
+        <div class="card settings-card border-0 mb-4">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-shield-lock me-2 text-warning"></i>Change Password
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="change_password">
+                    
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label fw-medium">Current Password</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password" 
+                               placeholder="Enter current password" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label fw-medium">New Password</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" 
+                               placeholder="Enter new password" required>
+                        <small class="form-text text-muted">Password must be at least 8 characters long</small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="confirm_password" class="form-label fw-medium">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                               placeholder="Confirm new password" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-key me-2"></i>Change Password
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Account Actions -->
+        <div class="card settings-card border-0 mb-4">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-gear me-2 text-secondary"></i>Account Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'logout' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-box-arrow-right me-2"></i>Logout
+                    </a>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="card danger-zone border-0">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <h5 class="mb-0 fw-bold text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Danger Zone
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">
+                    Once you delete your account, there is no going back. Please be certain.
+                </p>
+                
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                    <i class="bi bi-trash me-2"></i>Delete Account
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Delete Account
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger border-0">
+                    <strong>Warning!</strong> This action cannot be undone. This will permanently delete your account and all associated data.
+                </div>
+                
+                <form method="post" id="deleteAccountForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_account">
+                    
+                    <div class="mb-3">
+                        <label for="delete_password" class="form-label fw-medium">
+                            Enter your password to confirm deletion:
+                        </label>
+                        <input type="password" class="form-control" id="delete_password" name="delete_password" 
+                               placeholder="Enter your password" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                            <label class="form-check-label" for="confirmDelete">
+                                I understand that this action cannot be undone
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="deleteAccountForm" class="btn btn-danger">
+                    <i class="bi bi-trash me-2"></i>Delete My Account
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

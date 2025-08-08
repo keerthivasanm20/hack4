@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Hack4{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<style>
+/* Consistent card heights for dashboard */
+.stats-card {
+    height: 100%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stats-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.runner-dashboard-card {
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+}
+
+.runner-dashboard-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 122, 255, 0.15);
+}
+
+[data-bs-theme="dark"] .runner-dashboard-card {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .runner-dashboard-card:hover {
+    border-color: rgba(0, 122, 255, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+</style>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>Welcome back, {{ user.username }}!</h2>
+        <p class="text-muted">Monitor your agent usage and manage your runners.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <button class="btn btn-primary" onclick="showAddRunner()">
+            <i class="bi bi-plus-circle"></i> Add Runner
+        </button>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card stats-primary text-white border-0">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="fw-bold">{{ user_runners.count }}</h4>
+                        <p class="mb-0 opacity-75 small">Your Runners</p>
+                    </div>
+                    <i class="bi bi-cpu" style="font-size: 2rem; opacity: 0.7;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card stats-success text-white border-0">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="fw-bold">15</h4>
+                        <p class="mb-0 opacity-75 small">Agents Used</p>
+                    </div>
+                    <i class="bi bi-robot" style="font-size: 2rem; opacity: 0.7;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card stats-info text-white border-0">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="fw-bold">42h</h4>
+                        <p class="mb-0 opacity-75 small">Runtime</p>
+                    </div>
+                    <i class="bi bi-clock" style="font-size: 2rem; opacity: 0.7;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card stats-warning text-white border-0">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="fw-bold">98%</h4>
+                        <p class="mb-0 opacity-75 small">Success Rate</p>
+                    </div>
+                    <i class="bi bi-check-circle" style="font-size: 2rem; opacity: 0.7;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Agent Activity</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Agent</th>
+                                <th>Runner</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-robot me-2 text-primary"></i>
+                                        Data Scientist
+                                    </div>
+                                </td>
+                                <td>Cloud Runner #1</td>
+                                <td>2h 15m</td>
+                                <td><span class="badge bg-success">Completed</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">View</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-robot me-2 text-primary"></i>
+                                        Code Copilot
+                                    </div>
+                                </td>
+                                <td>Our Site</td>
+                                <td>45m</td>
+                                <td><span class="badge bg-primary">Running</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-warning">Stop</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card runner-dashboard-card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Your Runners</h5>
+            </div>
+            <div class="card-body">
+                {% if user_runners %}
+                {% for runner in user_runners %}
+                <div class="d-flex align-items-center mb-3 p-2 border rounded">
+                    <div class="runner-status me-3"></div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-0">{{ runner.name }}</h6>
+                        <small class="text-muted">{{ runner.get_runner_type_display }}</small>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-link" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Configure</a></li>
+                            <li><a class="dropdown-item" href="#">View Logs</a></li>
+                            <li><a class="dropdown-item text-danger" href="#">Delete</a></li>
+                        </ul>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="bi bi-cpu text-muted mb-2" style="font-size: 2rem;"></i>
+                    <p class="text-muted">No runners configured</p>
+                    <button class="btn btn-sm btn-primary" onclick="showAddRunner()">Add Runner</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showAddRunner() {
+    alert('Add runner functionality - coming soon!');
+}
+</script>
+{% endblock %}

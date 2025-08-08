@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Hack4{% endblock %}
+{% block page_title %}Register{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="d-flex align-items-center justify-content-center mb-3">
+                            <div class="bg-success rounded-2 d-inline-flex align-items-center justify-content-center me-2" 
+                                 style="width: 32px; height: 32px;">
+                                <i class="bi bi-lightning-charge text-white" style="font-size: 14px;"></i>
+                            </div>
+                            <h4 class="fw-bold mb-0" style="color: var(--text-primary);">Hack4</h4>
+                        </div>
+                        <h5 class="fw-semibold mb-2">Create Account</h5>
+                        <p class="text-muted small">Join Hack4 and start building with AI</p>
+                    </div>
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger mb-3">
+                        <ul class="mb-0 list-unstyled small">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li><i class="bi bi-exclamation-circle me-2"></i>{{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <li><i class="bi bi-exclamation-circle me-2"></i>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label fw-medium">Username</label>
+                            <input type="text" class="form-control" 
+                                   id="{{ form.username.id_for_label }}" 
+                                   name="{{ form.username.name }}" 
+                                   value="{{ form.username.value|default:'' }}"
+                                   placeholder="Choose a username" required>
+                            <small class="form-text text-muted">Letters, numbers, and @/./+/-/_ only</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.password1.id_for_label }}" class="form-label fw-medium">Password</label>
+                            <input type="password" class="form-control" 
+                                   id="{{ form.password1.id_for_label }}" 
+                                   name="{{ form.password1.name }}"
+                                   placeholder="Create a strong password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.password2.id_for_label }}" class="form-label fw-medium">Confirm Password</label>
+                            <input type="password" class="form-control" 
+                                   id="{{ form.password2.id_for_label }}" 
+                                   name="{{ form.password2.name }}"
+                                   placeholder="Confirm your password" required>
+                        </div>
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-success">
+                                Create Account
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center">
+                        <small class="text-muted">Already have an account? </small>
+                        <a href="{% url 'login' %}" class="text-decoration-none fw-medium small">Sign in</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

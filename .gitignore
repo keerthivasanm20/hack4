@@ -7,3 +7,4 @@ static/
 staticfiles/
 .env
 db.sqlite3
+/chroma_db

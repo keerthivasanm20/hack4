@@ -180,16 +180,56 @@
                 <h6 class="mb-0">
                     <i class="bi bi-chat-dots me-2 text-primary"></i>Conversations
                 </h6>
-                <button class="btn btn-sm btn-primary" onclick="startNewConversation()">
-                    <i class="bi bi-plus"></i>
-                </button>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-primary" onclick="startNewConversation()" title="New Chat">
+                        <i class="bi bi-plus"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle dropdown-toggle-split" 
+                            type="button" data-bs-toggle="dropdown" title="More Options">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" onclick="deleteAllConversations()">
+                            <i class="bi bi-trash me-2 text-danger"></i>Delete All Chats
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="refreshConversations()">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="exportAllConversations()">
+                            <i class="bi bi-download me-2"></i>Export All
+                        </a></li>
+                    </ul>
+                </div>
             </div>
             <div class="card-body p-2 conversations-sidebar">
                 <div id="conversationsList">
                     {% for conversation in conversations %}
-                    <div class="conversation-item" onclick="loadConversation({{ conversation.id }})" data-conversation-id="{{ conversation.id }}">
-                        <div class="fw-medium">{{ conversation.title }}</div>
-                        <small class="text-muted">{{ conversation.updated_at|timesince }} ago</small>
+                    <div class="conversation-item d-flex justify-content-between align-items-start" 
+                         onclick="loadConversation({{ conversation.id }})" 
+                         data-conversation-id="{{ conversation.id }}">
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            <div class="fw-medium text-truncate">{{ conversation.title }}</div>
+                            <small class="text-muted">{{ conversation.updated_at|timesince }} ago</small>
+                        </div>
+                        <div class="dropdown" onclick="event.stopPropagation();">
+                            <button class="btn btn-sm btn-outline-light border-0 text-muted" 
+                                    type="button" data-bs-toggle="dropdown" title="Options">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#" onclick="clearConversationMessages({{ conversation.id }})">
+                                    <i class="bi bi-eraser me-2"></i>Clear Messages
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="deleteConversation({{ conversation.id }})">
+                                    <i class="bi bi-trash me-2 text-danger"></i>Delete Chat
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" onclick="exportConversation({{ conversation.id }})">
+                                    <i class="bi bi-download me-2"></i>Export
+                                </a></li>
+                            </ul>
+                        </div>
                     </div>
                     {% empty %}
                     <div class="text-center text-muted py-4">
@@ -427,8 +467,159 @@ function clearCurrentConversation() {
     }
 }
 
-function exportConversation() {
-    if (!currentConversationId) {
+async function deleteConversation(conversationId) {
+    if (confirm('Are you sure you want to delete this conversation? This action cannot be undone.')) {
+        try {
+            const response = await fetch(`/api/conversation/${conversationId}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                // Remove conversation from sidebar
+                const conversationElement = document.querySelector(`[data-conversation-id="${conversationId}"]`);
+                conversationElement.remove();
+                
+                // If this was the current conversation, start a new one
+                if (currentConversationId === conversationId) {
+                    startNewConversation();
+                }
+                
+                alert(data.message);
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error deleting conversation:', error);
+            alert('Failed to delete conversation');
+        }
+    }
+}
+
+async function deleteAllConversations() {
+    if (confirm('Are you sure you want to delete ALL conversations? This action cannot be undone.')) {
+        try {
+            const response = await fetch('/api/conversations/delete-all/', {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                // Clear conversations list
+                document.getElementById('conversationsList').innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-chat-square-text mb-2" style="font-size: 2rem;"></i>
+                        <p class="mb-0">No conversations yet</p>
+                        <small>Start a new conversation!</small>
+                    </div>
+                `;
+                
+                // Start new conversation
+                startNewConversation();
+                
+                alert(data.message);
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error deleting all conversations:', error);
+            alert('Failed to delete conversations');
+        }
+    }
+}
+
+async function clearConversationMessages(conversationId) {
+    if (confirm('Are you sure you want to clear all messages in this conversation?')) {
+        try {
+            const response = await fetch(`/api/conversation/${conversationId}/clear/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                // If this is the current conversation, reload it
+                if (currentConversationId === conversationId) {
+                    loadConversation(conversationId);
+                }
+                
+                alert(data.message);
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error clearing conversation messages:', error);
+            alert('Failed to clear conversation messages');
+        }
+    }
+}
+
+async function refreshConversations() {
+    try {
+        const response = await fetch('/api/conversations/');
+        const data = await response.json();
+        
+        if (data.success) {
+            const conversationsList = document.getElementById('conversationsList');
+            
+            if (data.conversations.length === 0) {
+                conversationsList.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-chat-square-text mb-2" style="font-size: 2rem;"></i>
+                        <p class="mb-0">No conversations yet</p>
+                        <small>Start a new conversation!</small>
+                    </div>
+                `;
+            } else {
+                conversationsList.innerHTML = data.conversations.map(conv => `
+                    <div class="conversation-item d-flex justify-content-between align-items-start" 
+                         onclick="loadConversation(${conv.id})" 
+                         data-conversation-id="${conv.id}">
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            <div class="fw-medium text-truncate">${conv.title}</div>
+                            <small class="text-muted">${formatTimeAgo(conv.updated_at)}</small>
+                        </div>
+                        <div class="dropdown" onclick="event.stopPropagation();">
+                            <button class="btn btn-sm btn-outline-light border-0 text-muted" 
+                                    type="button" data-bs-toggle="dropdown" title="Options">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#" onclick="clearConversationMessages(${conv.id})">
+                                    <i class="bi bi-eraser me-2"></i>Clear Messages
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="deleteConversation(${conv.id})">
+                                    <i class="bi bi-trash me-2 text-danger"></i>Delete Chat
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" onclick="exportConversation(${conv.id})">
+                                    <i class="bi bi-download me-2"></i>Export
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+    } catch (error) {
+        console.error('Error refreshing conversations:', error);
+        alert('Failed to refresh conversations');
+    }
+}
+
+function exportConversation(conversationId = null) {
+    const targetId = conversationId || currentConversationId;
+    
+    if (!targetId) {
         alert('No conversation to export');
         return;
     }
@@ -449,9 +640,52 @@ function exportConversation() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `conversation_${currentConversationId}.txt`;
+    a.download = `conversation_${targetId}.txt`;
     a.click();
     URL.revokeObjectURL(url);
+}
+
+async function exportAllConversations() {
+    try {
+        const response = await fetch('/api/conversations/');
+        const data = await response.json();
+        
+        if (data.success && data.conversations.length > 0) {
+            let allExportText = 'Data Engineer Assistant - All Conversations Export\n';
+            allExportText += '================================================\n\n';
+            
+            for (const conv of data.conversations) {
+                allExportText += `Conversation: ${conv.title}\n`;
+                allExportText += `Created: ${new Date(conv.created_at).toLocaleString()}\n`;
+                allExportText += `Messages: ${conv.message_count}\n`;
+                allExportText += '-'.repeat(50) + '\n\n';
+            }
+            
+            const blob = new Blob([allExportText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `all_conversations_${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } else {
+            alert('No conversations to export');
+        }
+    } catch (error) {
+        console.error('Error exporting conversations:', error);
+        alert('Failed to export conversations');
+    }
+}
+
+function formatTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    return `${Math.floor(diffInSeconds / 86400)} days ago`;
 }
 
 function getCookie(name) {

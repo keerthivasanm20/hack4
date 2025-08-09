@@ -11,17 +11,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
 import asyncio
-
+from .models import ChatBot, Conversation, Message
+from .chatbot_service import ChatBotManager, DataEngineerChatBot
 from agents.forms import AgentForm
 from .models import Agent, Runner
-
-# Import chatbot models with error handling
-try:
-    from .models import ChatBot, Conversation, Message
-    from .chatbot_service import ChatBotManager, DataEngineerChatBot
-    CHATBOT_AVAILABLE = True
-except ImportError:
-    CHATBOT_AVAILABLE = False
+CHATBOT_AVAILABLE = True
 
 def home(request):
     # Get search query
@@ -277,7 +271,7 @@ def chatbot(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def chatbot_message(request):
-    """Handle chatbot message API."""
+    """Handle chatbot message API with full DataEngineerChatBot integration."""
     if not CHATBOT_AVAILABLE:
         return JsonResponse({'error': 'Chatbot not available'}, status=503)
     
@@ -305,8 +299,32 @@ def chatbot_message(request):
             )
             conversation_id = conversation.id
         
-        # Create a simplified response for now
+        # Initialize the DataEngineerChatBot service
         try:
+            chatbot_service = DataEngineerChatBot(chatbot_id)
+            
+            # Get the response from the chatbot service (using sync method)
+            response_data = chatbot_service.get_response_sync(
+                user_message=message,
+                conversation_id=conversation_id,
+                user_id=request.user.id
+            )
+            
+            if response_data['success']:
+                return JsonResponse({
+                    'success': True,
+                    'response': response_data['response'],
+                    'metadata': response_data.get('metadata', {})
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': response_data.get('error', 'Unknown error'),
+                    'response': response_data.get('response', 'Sorry, I encountered an error. Please try again.')
+                }, status=500)
+            
+        except Exception as e:
+            # Fallback to simple response if chatbot service fails
             conversation = Conversation.objects.get(id=conversation_id, user=request.user)
             
             # Save user message
@@ -316,32 +334,39 @@ def chatbot_message(request):
                 message_type='user'
             )
             
-            # Generate a simple response
-            response_content = f"I understand you're asking about: '{message}'. As your Data Engineering Assistant, I'm here to help with data pipelines, ETL processes, database optimization, and other technical challenges. Could you provide more specific details about your current challenge?"
+            # Generate fallback response
+            fallback_response = f"""I'm experiencing some technical difficulties, but I can still help you with: "{message}"
+
+As your Data Engineering Assistant, I can provide guidance on:
+• Data pipeline design and optimization
+• ETL/ELT processes and best practices  
+• Database design and query optimization
+• Big data technologies (Spark, Kafka, Airflow)
+• Cloud data platforms and architecture
+• Performance tuning and troubleshooting
+
+Could you please provide more specific details about your challenge? I'll do my best to assist you!
+
+Error details: {str(e)}"""
             
             # Save assistant response
             Message.objects.create(
                 conversation=conversation,
-                content=response_content,
+                content=fallback_response,
                 message_type='assistant',
-                metadata={'model_used': 'simple'}
+                metadata={'model_used': 'fallback', 'error': str(e)}
             )
             
             return JsonResponse({
                 'success': True,
-                'response': response_content,
+                'response': fallback_response,
                 'metadata': {
                     'conversation_id': conversation_id,
-                    'model_used': 'simple'
+                    'model_used': 'fallback',
+                    'tools_available': ['mcp_server', 'knowledge_base_search', 'web_search'],
+                    'agent_mode': False
                 }
             })
-            
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'error': str(e),
-                'response': 'Sorry, I encountered an error. Please try again.'
-            }, status=500)
         
     except Exception as e:
         return JsonResponse({
@@ -386,13 +411,109 @@ def conversation_detail(request, conversation_id):
 @csrf_exempt
 @require_http_methods(["DELETE"])
 def delete_conversation(request, conversation_id):
-    """Delete a conversation."""
+    """Delete a conversation using the chatbot service."""
     if not CHATBOT_AVAILABLE:
         return JsonResponse({'error': 'Chatbot not available'}, status=503)
     
     try:
-        conversation = Conversation.objects.get(id=conversation_id, user=request.user)
-        conversation.delete()
-        return JsonResponse({'success': True})
-    except Conversation.DoesNotExist:
-        return JsonResponse({'error': 'Conversation not found'}, status=404)
+        # Get chatbot_id from request or use default
+        chatbot_id = request.GET.get('chatbot_id', 1)
+        
+        # Initialize the DataEngineerChatBot service
+        chatbot_service = DataEngineerChatBot(chatbot_id)
+        
+        # Use the chatbot service to delete the conversation
+        result = chatbot_service.delete_conversation(conversation_id, request.user.id)
+        
+        if result['success']:
+            return JsonResponse(result)
+        else:
+            return JsonResponse(result, status=404)
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Failed to delete conversation: {str(e)}'
+        }, status=500)
+
+@login_required
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def delete_all_conversations(request):
+    """Delete all conversations for the current user."""
+    if not CHATBOT_AVAILABLE:
+        return JsonResponse({'error': 'Chatbot not available'}, status=503)
+    
+    try:
+        # Get chatbot_id from request or use default
+        chatbot_id = request.GET.get('chatbot_id', 1)
+        
+        # Initialize the DataEngineerChatBot service
+        chatbot_service = DataEngineerChatBot(chatbot_id)
+        
+        # Use the chatbot service to delete all conversations
+        result = chatbot_service.delete_all_conversations(request.user.id)
+        
+        return JsonResponse(result)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Failed to delete all conversations: {str(e)}'
+        }, status=500)
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def clear_conversation_messages(request, conversation_id):
+    """Clear all messages in a conversation but keep the conversation."""
+    if not CHATBOT_AVAILABLE:
+        return JsonResponse({'error': 'Chatbot not available'}, status=503)
+    
+    try:
+        # Get chatbot_id from request or use default
+        chatbot_id = request.GET.get('chatbot_id', 1)
+        
+        # Initialize the DataEngineerChatBot service
+        chatbot_service = DataEngineerChatBot(chatbot_id)
+        
+        # Use the chatbot service to clear conversation messages
+        result = chatbot_service.clear_conversation_messages(conversation_id, request.user.id)
+        
+        if result['success']:
+            return JsonResponse(result)
+        else:
+            return JsonResponse(result, status=404)
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Failed to clear conversation messages: {str(e)}'
+        }, status=500)
+
+@login_required
+def get_user_conversations(request):
+    """Get all conversations for the current user."""
+    if not CHATBOT_AVAILABLE:
+        return JsonResponse({'error': 'Chatbot not available'}, status=503)
+    
+    try:
+        # Get chatbot_id from request or use default
+        chatbot_id = request.GET.get('chatbot_id', 1)
+        
+        # Initialize the DataEngineerChatBot service
+        chatbot_service = DataEngineerChatBot(chatbot_id)
+        
+        # Get user conversations
+        conversations = chatbot_service.get_user_conversations(request.user.id)
+        
+        return JsonResponse({
+            'success': True,
+            'conversations': conversations
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Failed to get conversations: {str(e)}'
+        }, status=500)

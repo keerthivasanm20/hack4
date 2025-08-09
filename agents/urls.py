@@ -14,4 +14,7 @@ urlpatterns = [
     path('api/chatbot/message/', views.chatbot_message, name='chatbot_message'),
     path('api/conversation/<int:conversation_id>/', views.conversation_detail, name='conversation_detail'),
     path('api/conversation/<int:conversation_id>/delete/', views.delete_conversation, name='delete_conversation'),
+    path('api/conversation/<int:conversation_id>/clear/', views.clear_conversation_messages, name='clear_conversation_messages'),
+    path('api/conversations/', views.get_user_conversations, name='get_user_conversations'),
+    path('api/conversations/delete-all/', views.delete_all_conversations, name='delete_all_conversations'),
 ]

@@ -102,10 +102,17 @@ MESSAGE_TAGS = {
     'error': 'danger',
 }
 
-# OpenAI API configuration
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', 'your-openai-api-key-here')
+# AWS Bedrock configuration
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID', '')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY', '')
+AWS_REGION = os.getenv('AWS_REGION', 'us-east-1')
+BEDROCK_MODEL_ID = os.getenv('BEDROCK_MODEL_ID', '')
+
+# ChromaDB and Knowledge Base configuration
+KNOWLEDGE_BASE_PATH = os.path.join(BASE_DIR, 'knowledge_base')
+CHROMADB_PERSIST_DIRECTORY = os.path.join(BASE_DIR, 'chroma_db')
+CHROMADB_COLLECTION_NAME = 'data_engineering_knowledge'
 
 # Chatbot configuration
-CHATBOT_KNOWLEDGE_BASE_PATH = os.path.join(BASE_DIR, 'data', 'knowledge_base')
 CHATBOT_MAX_CONTEXT_LENGTH = 4000
 CHATBOT_MAX_RESPONSE_LENGTH = 1000
